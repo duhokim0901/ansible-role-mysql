@@ -1,4 +1,37 @@
 ---
+
+- name: Get MySQL version.
+  command: 'mysql --version'
+  register: mysql_cli_version
+  changed_when: false
+  check_mode: false
+
+- name: Ensure MySQL is restarted
+  service:
+    name: "{{ mysql_daemon }}"
+    state: restarted
+  when: ('8.0.' in mysql_cli_version.stdout)
+
+- name: Extract temporary password from log
+  shell: >
+    cat /var/log/mysqld.log | grep "A temporary password is generated for root@localhost:" | tail -n 1 | awk -F ' ' '{print $NF}'
+  register: temp_password
+  when: ('8.0.' in mysql_cli_version.stdout)
+
+- name: Debug temporary password
+  debug:
+    var: temp_password
+
+
+- name: Reset MySQL root password using SQL command
+  command: >
+    mysql --connect-expired-password -u root -p{{ temp_password.stdout }} -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
+  args:
+    warn: false
+  when: ('8.0.' in mysql_cli_version.stdout)
+
+
+
 - name: Ensure default user is present.
   mysql_user:
     name: "{{ mysql_user_name }}"
@@ -26,6 +59,7 @@
   with_items:
     - DELETE FROM mysql.user WHERE User='{{ mysql_root_username }}' AND Host NOT IN ('localhost', '127.0.0.1', '::1')
   changed_when: false
+  when: "'8.0.' not in mysql_cli_version.stdout"
 
 - name: Get list of hosts for the root user.
   command: mysql -NBe
@@ -50,7 +84,7 @@
   with_items: "{{ mysql_root_hosts.stdout_lines|default([]) }}"
   when: >
     ((mysql_install_packages | bool) or mysql_root_password_update)
-    and ('5.7.' in mysql_cli_version.stdout or '8.0.' in mysql_cli_version.stdout)
+    and ('5.7.' in mysql_cli_version.stdout)
 
 # Set root password for MySQL < 5.7.x.
 - name: Update MySQL root password for localhost root account (< 5.7.x).
@@ -79,6 +113,7 @@
   register: mysql_anonymous_hosts
   changed_when: false
   check_mode: false
+  when: ('8.0.' not in mysql_cli_version.stdout)
 
 - name: Remove anonymous MySQL users.
   mysql_user:
@@ -86,8 +121,10 @@
     host: "{{ item }}"
     state: absent
   with_items: "{{ mysql_anonymous_hosts.stdout_lines|default([]) }}"
+  when: ('8.0.' not in mysql_cli_version.stdout)
 
 - name: Remove MySQL test database.
   mysql_db:
     name: 'test'
     state: absent
+  when: ('8.0.' not in mysql_cli_version.stdout)
