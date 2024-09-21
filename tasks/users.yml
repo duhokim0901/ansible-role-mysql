@@ -9,6 +9,8 @@
     append_privs: "{{ item.append_privs | default('no') }}"
     encrypted: "{{ item.encrypted | default('no') }}"
     login_user: "{{ mysql_root_username }}"
+    login_host: 'localhost'
     login_password: "{{ mysql_root_password }}"
+    login_unix_socket: "{{ mysql_socket }}"  
   with_items: "{{ mysql_users }}"
   no_log: "{{ mysql_hide_passwords }}"

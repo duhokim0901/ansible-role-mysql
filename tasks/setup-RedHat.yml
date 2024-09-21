@@ -21,7 +21,6 @@
     installed_packages: "{{ installed_packages | default([]) + [item | regex_replace('^mysql-community-', '')] }}"
   loop: "{{ rpm_check.results | selectattr('rc', 'equalto', 0) | map(attribute='item') | list }}"
 
-
 - name: Check if MySQL community packages are already downloaded
   stat:
     path: "/tmp/mysql-community-{{ item }}-{{ mysql_version }}-1.el8.x86_64.rpm"
@@ -40,6 +39,10 @@
   loop_control:
     loop_var: item  # 명시적으로 loop 변수 지정
 
+- name: Extract only the item from rpm_files results
+  set_fact:
+    downloaded_items: "{{ rpm_files.results | map(attribute='item') | list }}"
+
 - name: Download MySQL community packages
   get_url:
     url: "http://repo.mysql.com/yum/mysql-{{ mysql_version.split('.')[0] }}.{{ mysql_version.split('.')[1] }}-community/el/8/x86_64/mysql-community-{{ item }}-{{ mysql_version }}-1.el8.x86_64.rpm"
@@ -55,9 +58,7 @@
     - debugsource
     - icu-data-files
     - server-debug
-  when: (dbms == "mysql" and not (rpm_files.results | selectattr('item', 'equalto', item) | map(attribute='stat.exists') | first)) or (dbms == "mysql" and installed_packages is undefined)
-  loop_control:
-    loop_var: item  # 동일하게 loop 변수 지정
+  when: (dbms == "mysql" and item not in downloaded_items) or (dbms == "mysql" and installed_packages is undefined)
 
 
 

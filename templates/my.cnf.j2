@@ -10,6 +10,7 @@ port = {{ mysql_port }}
 bind-address = {{ mysql_bind_address }}
 datadir = {{ mysql_datadir }}
 socket = {{ mysql_socket }}
+mysqlx_socket = {{ mysql_mysqlx_socket }}
 pid-file = {{ mysql_pid_file }}
 {% if mysql_skip_name_resolve %}
 skip-name-resolve
@@ -47,8 +48,8 @@ disable-log-bin
 server-id = {{ mysql_server_id }}
 
 {% if mysql_replication_role == 'master' %}
-log_bin = mysql-bin
-log-bin-index = mysql-bin.index
+log_bin = {{ mysql_binlog_dir }}/mysql-bin
+log-bin-index = {{ mysql_binlog_dir }}/mysql-bin.index
 expire_logs_days = {{ mysql_expire_logs_days }}
 max_binlog_size = {{ mysql_max_binlog_size }}
 binlog_format = {{mysql_binlog_format}}
@@ -64,8 +65,8 @@ binlog_ignore_db = {{ db.name }}
 
 {% if mysql_replication_role == 'slave' %}
 read_only
-relay-log = relay-bin
-relay-log-index = relay-bin.index
+relay-log = {{ mysql_binlog_dir }}/relay-bin
+relay-log-index = {{ mysql_binlog_dir }}/relay-bin.index
 {% endif %}
 {% endif %}
 
@@ -76,7 +77,6 @@ symbolic-links = 0
 user = mysql
 
 # http://dev.mysql.com/doc/refman/5.5/en/performance-schema.html
-;performance_schema
 
 # Memory settings.
 key_buffer_size = {{ mysql_key_buffer_size }}
@@ -102,6 +102,9 @@ join_buffer_size = {{ mysql_join_buffer_size }}
 wait_timeout = {{ mysql_wait_timeout }}
 lower_case_table_names = {{ mysql_lower_case_table_names }}
 event_scheduler = {{ mysql_event_scheduler_state }}
+default-time-zone = '{{ mysql_default_time_zone }}'
+character-set-server = {{ mysql_character_set_server }}
+collation-server = {{ mysql_collation_server }}
 
 # InnoDB settings.
 {% if mysql_supports_innodb_large_prefix and '8.0.' not in mysql_cli_version.stdout %}
@@ -114,6 +117,8 @@ innodb_log_file_size = {{ mysql_innodb_log_file_size }}
 innodb_log_buffer_size = {{ mysql_innodb_log_buffer_size }}
 innodb_flush_log_at_trx_commit = {{ mysql_innodb_flush_log_at_trx_commit }}
 innodb_lock_wait_timeout = {{ mysql_innodb_lock_wait_timeout }}
+innodb_log_group_home_dir = {{ mysql_innodb_log_group_home_dir }}
+innodb_data_home_dir = {{ mysql_innodb_data_home_dir }}
 
 [mysqldump]
 quick

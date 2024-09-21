@@ -14,7 +14,7 @@
 
 - name: Extract temporary password from log
   shell: >
-    cat /var/log/mysqld.log | grep "A temporary password is generated for root@localhost:" | tail -n 1 | awk -F ' ' '{print $NF}'
+    cat {{ mysql_log_error }} | grep "A temporary password is generated for root@localhost:" | tail -n 1 | awk -F ' ' '{print $NF}'
   register: temp_password
   when: ('8.0.' in mysql_cli_version.stdout)
 

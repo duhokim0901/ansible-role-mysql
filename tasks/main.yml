@@ -22,7 +22,7 @@
       or (arch_mysql_install_packages is defined and arch_mysql_install_packages.changed) }}"
 
 # Configure MySQL.
-#- include_tasks: configure.yml
+- include_tasks: configure.yml
 - include_tasks: secure-installation.yml
   when: is_secure_task == true
 - include_tasks: databases.yml
