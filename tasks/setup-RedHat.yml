@@ -1,5 +1,18 @@
 ---
 
+- name: Get primary IP address (non-VIP)
+  shell: "hostname -I | awk '{print $1}'"
+  register: ip_address
+  changed_when: false
+
+- name: Remove dots from IP address to create unique mysql_server_id
+  set_fact:
+    mysql_server_id: "{{ ip_address.stdout | regex_replace('\\.', '') }}"
+
+- name: Display the generated mysql_server_id
+  debug:
+    msg: "The generated mysql_server_id is: {{ mysql_server_id }}"
+
 - name: Check installed MySQL packages
   command: rpm -q mysql-community-{{ item }}
   loop:

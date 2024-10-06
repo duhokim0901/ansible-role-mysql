@@ -24,7 +24,7 @@
 # Configure MySQL.
 - include_tasks: configure.yml
 - include_tasks: secure-installation.yml
-  when: is_secure_task == true
+  #when: is_secure_task == true
 - include_tasks: databases.yml
 - include_tasks: users.yml
 #- include_tasks: replication.yml

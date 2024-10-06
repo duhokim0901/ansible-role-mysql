@@ -58,19 +58,6 @@
   debug:
     msg: "OS Major version: {{ ansible_distribution_version.split('.')[0] }}, OS Minor version: {{ ansible_distribution_version.split('.')[1] | default('0') }}"
 
-- name: Get primary IP address (non-VIP)
-  shell: "hostname -I | awk '{print $1}'"
-  register: ip_address
-  changed_when: false
-
-- name: Remove dots from IP address to create unique mysql_server_id
-  set_fact:
-    mysql_server_id: "{{ ip_address.stdout | regex_replace('\\.', '') }}"
-
-- name: Display the generated mysql_server_id
-  debug:
-    msg: "The generated mysql_server_id is: {{ mysql_server_id }}"
-
 - name: Get the list of installed MySQL packages
   shell: "rpm -qa | grep '{{ dbms }}' || true"
   register: mysql_package_list

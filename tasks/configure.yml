@@ -13,7 +13,12 @@
     group: root
     mode: 0644
     force: "{{ overwrite_global_mycnf }}"
-  notify: stop mysql
+
+- name: stop mysql
+  service:
+    name: "{{ mysql_daemon }}"
+    state: stopped
+  when: ('8.0.' in mysql_cli_version.stdout)
 
 - name: Remove old MySQL data
   command: rm -rf /data
@@ -48,6 +53,30 @@
 - name: Remove old MySQL data
   command: rm -rf /var/lib/mysql
   ignore_errors: yes
+
+- name: Ensure MySQL user exists
+  user:
+    name: mysql
+    home: /var/lib/mysql
+    shell: /bin/bash
+    state: present
+
+- name: Ensure the MySQL home directory exists
+  file:
+    path: /var/lib/mysql
+    state: directory
+    owner: mysql
+    group: mysql
+    mode: '0755'
+
+- name: Add file context for MySQL logs
+  command: semanage fcontext -a -t ssh_home_t "/var/lib/mysql/.ssh(/.*)?"
+  ignore_errors: yes
+
+- name: Restore SELinux contexts
+  command: restorecon -Rv '/var/lib/mysql/.ssh'
+  ignore_errors: yes
+
 
 - name: Initialize MySQL
   command: mysqld --defaults-file=/etc/my.cnf --initialize --lower_case_table_names=1 --user=mysql --console

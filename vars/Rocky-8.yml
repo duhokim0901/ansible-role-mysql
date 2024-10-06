@@ -51,8 +51,6 @@ mysql_table_open_cache: "256"
 mysql_max_binlog_size: "100M"
 mysql_binlog_format: "ROW"
 mysql_expire_logs_days: "10"
-mysql_replication_role: "{{ var_mysql_replication_role }}"
-mysql_replication_master: ''
 mysql_replication_user: {
     name: "repl_user",
     host: "%",
@@ -71,3 +69,4 @@ mysql_character_set_server: utf8mb4
 mysql_collation_server: utf8mb4_general_ci
 mysql_lower_case_table_names: 1
 mysql_skip_name_resolve: true
+mysql_default_authentication_plugin: 'mysql_native_password'

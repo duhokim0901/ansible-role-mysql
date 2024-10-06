@@ -43,27 +43,32 @@ long_query_time = {{ mysql_slow_query_time }}
 disable-log-bin
 {% endif %}
 
-
+{% if mysql_replication_master %}
 # Replication
 server-id = {{ mysql_server_id }}
 
+{% if mysql_replication_role == 'master' %}
 log_bin = {{ mysql_binlog_dir }}/mysql-bin
 log-bin-index = {{ mysql_binlog_dir }}/mysql-bin.index
 expire_logs_days = {{ mysql_expire_logs_days }}
 max_binlog_size = {{ mysql_max_binlog_size }}
 binlog_format = {{mysql_binlog_format}}
 
+{% for db in mysql_databases %}
+{% if db.replicate|default(1) %}
+binlog_do_db = {{ db.name }}
+{% else %}
+binlog_ignore_db = {{ db.name }}
+{% endif %}
+{% endfor %}
+{% endif %}
+
 {% if mysql_replication_role == 'slave' %}
 read_only
 relay-log = {{ mysql_binlog_dir }}/relay-bin
 relay-log-index = {{ mysql_binlog_dir }}/relay-bin.index
-
-replicate-ignore-db = mysql  
-replicate-ignore-db = sys  
-replicate-ignore-db = information_schema  
-replicate-ignore-db = performance_schema
 {% endif %}
-
+{% endif %}
 
 # Disabling symbolic-links is recommended to prevent assorted security risks
 symbolic-links = 0
@@ -94,7 +99,6 @@ group_concat_max_len = {{ mysql_group_concat_max_len }}
 join_buffer_size = {{ mysql_join_buffer_size }}
 
 # Other settings.
-default_authentication_plugin = {{ mysql_default_authentication_plugin }}
 wait_timeout = {{ mysql_wait_timeout }}
 lower_case_table_names = {{ mysql_lower_case_table_names }}
 event_scheduler = {{ mysql_event_scheduler_state }}
